@@ -49,7 +49,7 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
     private Context context;
     private int count = 0;
     private int currentItem;
-    private AnimatorSet animatorSetFangda;
+    private List<AnimatorSet> animatorSetFangdas;
 
 
     private WeakHandler handler = new WeakHandler();
@@ -95,6 +95,7 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
 
         myViews = new ArrayList<>();
         bgImageViews = new ArrayList<>();
+        animatorSetFangdas = new ArrayList<>();
         roundImageToLeft.setVisibility(VISIBLE);
         roundImageToLeft.setLeftOrRight(false);
         roundImageToRight.setVisibility(INVISIBLE);
@@ -222,6 +223,7 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
                 mScroller.setmDuration(100);
                 touch = true;
                 suoxiaAll();
+                removeAllFangDa();
                 stopAutoPlay();
             }
         }
@@ -372,7 +374,7 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
                 break;
             case 2://end Sliding
                 for (int i = 0; i < myViews.size(); i++) {
-                    fada(myViews.get(i));
+                    animatorSetFangdas.add(fada(myViews.get(i)));
                 }
 
                 break;
@@ -447,8 +449,8 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
         }
 
     }
-    private void fada(View view, AnimatorListenerAdapter mAnimatorListenerAdapter) {
-        animatorSetFangda = new AnimatorSet();//组合动画
+    private AnimatorSet fada(View view, AnimatorListenerAdapter mAnimatorListenerAdapter) {
+        AnimatorSet animatorSetFangda = new AnimatorSet();//组合动画
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 0.9f, 1f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(view, "scaleY", 0.9f, 1f);
         animatorSetFangda.setStartDelay(300);
@@ -459,10 +461,23 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
             animatorSetFangda.addListener(mAnimatorListenerAdapter);
         }
         animatorSetFangda.start();
+        return animatorSetFangda;
     }
 
-    private void fada(View view) {
-        fada(view, null);
+    private AnimatorSet fada(View view) {
+        return fada(view, null);
+    }
+
+    private void removeAllFangDa(){
+        if(animatorSetFangdas != null){
+            while (animatorSetFangdas.size() > 0){
+                animatorSetFangdas.get(0).end();
+                animatorSetFangdas.remove(0);
+            }
+        }
+//        for(int i = 0;i < myViews.size();i++){
+//            myViews.get(i).clearAnimation();
+//        }
     }
 
     private void suoxia(View view, AnimatorListenerAdapter mAnimatorListenerAdapter) {
