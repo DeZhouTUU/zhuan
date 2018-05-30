@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/im_bg"
+            android:layout_width="match_parent"
+            android:layout_height="400px"
+            android:scaleType="centerCrop" />
+        <com.dezhoutuu.zhuan.Banner.View.RoundAngleImageView
+            android:id="@+id/roundImageToRight"
+            android:layout_width="match_parent"
+            android:layout_height="400px"
+            android:visibility="invisible"
+            android:scaleType="centerCrop" />
+        <com.dezhoutuu.zhuan.Banner.View.RoundAngleImageView
+            android:id="@+id/roundImageToLeft"
+            android:layout_width="match_parent"
+            android:layout_height="400px"
+            android:visibility="invisible"
+            android:scaleType="centerCrop" />
+    </RelativeLayout>
+    <com.dezhoutuu.zhuan.Banner.View.BannerViewPager
+        android:id="@+id/bannerViewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="150px"
+        android:clipChildren="false" />
+</RelativeLayout>
