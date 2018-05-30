@@ -15,8 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.LinearInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -37,8 +39,10 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
     private BannerViewPager bannerViewPager;
     private RoundAngleImageView roundImageToLeft;
     private RoundAngleImageView roundImageToRight;
-    private ImageView imBg;
+    private FrameLayout flBg;
+//    private ImageView imBg;
     private List<View> myViews;
+    private List<ImageView> bgImageViews;
 
     private List<BannerEntity> mBannerEntitys;
     private ViewPagerAdapter mViewPagerAdapter;
@@ -56,13 +60,15 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
     private FixedSpeedScroller mScroller;
     private boolean scrollOneTime = false;
 
+    private BannerItemClickListener mBannerItemClickListener;
+
     //以下背景
     //手指按住
     private boolean touch = false;
+
     //手放下没有归为
     private boolean touchover = false;
     private int mViewPagerIndex = 0;
-
     public TUUBanner(Context context) {
         super(context);
         init(context);
@@ -84,9 +90,11 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
         bannerViewPager = (BannerViewPager) view.findViewById(R.id.bannerViewPager);
         roundImageToLeft = (RoundAngleImageView) view.findViewById(R.id.roundImageToLeft);
         roundImageToRight = (RoundAngleImageView) view.findViewById(R.id.roundImageToRight);
-        imBg = (ImageView) view.findViewById(R.id.im_bg);
+//        imBg = (ImageView) view.findViewById(R.id.im_bg);
+        flBg = (FrameLayout)view.findViewById(R.id.fl_bg);
 
         myViews = new ArrayList<>();
+        bgImageViews = new ArrayList<>();
         roundImageToLeft.setVisibility(VISIBLE);
         roundImageToLeft.setLeftOrRight(false);
         roundImageToRight.setVisibility(INVISIBLE);
@@ -94,9 +102,6 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
     }
 
     public TUUBanner start() {
-//        for(int i = 0;i < mBannerEntitys.size();i++){
-//            Glide.with(context).load(mBannerEntitys.get(i).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
-//        }
         setImageList(mBannerEntitys);
         setData();
         return this;
@@ -107,19 +112,53 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
             return;
         }
         for (int i = 0; i <= imagesUrl.size() + 1; i++) {
+            int index = 0;
+            if (i == 0) {
+                index = imagesUrl.size() - 1;
+            } else if (i == imagesUrl.size() + 1) {
+                index = 0;
+            } else {
+                index = i - 1;
+            }
+            final int indexForClick = index;
+
             ImageView imageView = null;
             imageView = new ImageView(context);
             imageView.setPadding(50, 0, 50, 0);
-            String url = null;
-            if (i == 0) {
-                url = imagesUrl.get(imagesUrl.size() - 1).getImg();
-            } else if (i == imagesUrl.size() + 1) {
-                url = imagesUrl.get(0).getImg();
-            } else {
-                url = imagesUrl.get(i - 1).getImg();
-            }
+            String url = imagesUrl.get(index).getImg();
+//            if (i == 0) {
+//                url = imagesUrl.get(imagesUrl.size() - 1).getImg();
+//            } else if (i == imagesUrl.size() + 1) {
+//                url = imagesUrl.get(0).getImg();
+//            } else {
+//                url = imagesUrl.get(i - 1).getImg();
+//            }
             Glide.with(context.getApplicationContext()).load(url).into(imageView);
+            imageView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mBannerItemClickListener != null){
+                        mBannerItemClickListener.clickItem(indexForClick);
+                    }
+                }
+            });
             myViews.add(imageView);
+
+            ImageView imageViewBg = new ImageView(context);
+            String urlBg = imagesUrl.get(index).getBg();
+//            if (i == 0) {
+//                urlBg = imagesUrl.get(imagesUrl.size() - 1).getBg();
+//            } else if (i == imagesUrl.size() + 1) {
+//                urlBg = imagesUrl.get(0).getBg();
+//            } else {
+//                urlBg = imagesUrl.get(i - 1).getBg();
+//            }
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
+            imageViewBg.setLayoutParams(layoutParams);
+            imageViewBg.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            Glide.with(context.getApplicationContext()).load(urlBg).into(imageViewBg);
+            flBg.addView(imageViewBg);
+            bgImageViews.add(imageViewBg);
         }
     }
 
@@ -150,12 +189,22 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
         }
     }
 
-
     public void setImageUrls(List<BannerEntity> imageUrls) {
         this.mBannerEntitys = imageUrls;
         this.count = imageUrls.size();
     }
 
+
+    private void showBg(int index){
+//        bgImageViews.get(0).setVisibility(View.VISIBLE);
+        for(int i = 0;i < bgImageViews.size();i++){
+            if (i == index+1){
+                bgImageViews.get(i).setVisibility(View.VISIBLE);
+            }else {
+                bgImageViews.get(i).setVisibility(View.INVISIBLE);
+            }
+        }
+    }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -170,14 +219,15 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
             } else if (action == MotionEvent.ACTION_DOWN) {
 //                touchover = true;
                 scrollOneTime = true;
-                mScroller.setmDuration(0);
+                mScroller.setmDuration(100);
                 touch = true;
-//                suoxia();
+                suoxiaAll();
                 stopAutoPlay();
             }
         }
         return super.dispatchTouchEvent(ev);
     }
+
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -206,7 +256,8 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
                     } else {
                         num = position;
                     }
-                    Glide.with(context).load(mBannerEntitys.get(num).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                    Glide.with(context).load(mBannerEntitys.get(num).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                    showBg(num);
                     roundImageToLeft.setVisibility(VISIBLE);
                     roundImageToRight.setVisibility(INVISIBLE);
 
@@ -216,7 +267,8 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
                     } else {
                         num = position;
                     }
-                    Glide.with(context).load(mBannerEntitys.get(num - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                    Glide.with(context).load(mBannerEntitys.get(num - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                    showBg(num - 1);
                     roundImageToRight.setVisibility(VISIBLE);
                     roundImageToLeft.setVisibility(INVISIBLE);
                 }
@@ -233,18 +285,23 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
 //                    Glide.with(context).load(R.mipmap.ic_launcher).diskCacheStrategy(DiskCacheStrategy.ALL).into(roundImageToLeft);
 //                }
                 if (position == mBannerEntitys.size()) {
-                    Glide.with(context).load(mBannerEntitys.get(0).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                    Glide.with(context).load(mBannerEntitys.get(0).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                    showBg(0);
                 } else if (position == 0) {
                     num = mBannerEntitys.size();
-                    Glide.with(context).load(mBannerEntitys.get(num - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                    Glide.with(context).load(mBannerEntitys.get(num - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                    showBg(num - 1);
                 } else {
                     if (position == mViewPagerIndex) {
-                        Glide.with(context).load(mBannerEntitys.get(position).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                        Glide.with(context).load(mBannerEntitys.get(position).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                        showBg(position);
                     } else {
                         if (!touchover) {
-                            Glide.with(context).load(mBannerEntitys.get(position).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                            Glide.with(context).load(mBannerEntitys.get(position).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                            showBg(position);
                         } else {
-                            Glide.with(context).load(mBannerEntitys.get(position - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+//                            Glide.with(context).load(mBannerEntitys.get(position - 1).getBg()).diskCacheStrategy(DiskCacheStrategy.ALL).into(imBg);
+                            showBg(position - 1);
                             roundImageToLeft.setVisibility(INVISIBLE);
                             roundImageToRight.setVisibility(VISIBLE);
                         }
@@ -304,8 +361,8 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
             case 1://start Sliding
                 touchover = true;
                 mViewPagerIndex = bannerViewPager.getCurrentItem();
-                for (int i = 0; i < myViews.size(); i++) {
-                    suoxia(myViews.get(i));
+                if(!touch){
+                    suoxiaAll();
                 }
                 if (currentItem == count + 1) {
                     bannerViewPager.setCurrentItem(1, false);
@@ -366,13 +423,13 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
         }
     };
 
-
     private class ViewPagerAdapter extends PagerAdapter {
+
+
         @Override
         public int getCount() {
             return myViews.size();
         }
-
         @Override
         public boolean isViewFromObject(View arg0, Object arg1) {
             return arg0 == arg1;
@@ -388,8 +445,8 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
             view.addView(myViews.get(position));
             return myViews.get(position);
         }
-    }
 
+    }
     private void fada(View view, AnimatorListenerAdapter mAnimatorListenerAdapter) {
         animatorSetFangda = new AnimatorSet();//组合动画
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 0.9f, 1f);
@@ -423,5 +480,15 @@ public class TUUBanner extends RelativeLayout implements ViewPager.OnPageChangeL
 
     private void suoxia(View view) {
         suoxia(view, null);
+    }
+
+    private void suoxiaAll() {
+        for (int i = 0; i < myViews.size(); i++) {
+            suoxia(myViews.get(i));
+        }
+    }
+
+    public void setmBannerItemClickListener(BannerItemClickListener mBannerItemClickListener) {
+        this.mBannerItemClickListener = mBannerItemClickListener;
     }
 }

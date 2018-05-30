@@ -5,11 +5,17 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <ImageView
+
+        <FrameLayout
+            android:id="@+id/fl_bg"
+            android:layout_width="match_parent"
+            android:layout_height="400px">
+        </FrameLayout>
+        <!--<ImageView
             android:id="@+id/im_bg"
             android:layout_width="match_parent"
             android:layout_height="400px"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop" />-->
         <com.dezhoutuu.zhuan.Banner.View.RoundAngleImageView
             android:id="@+id/roundImageToRight"
             android:layout_width="match_parent"
